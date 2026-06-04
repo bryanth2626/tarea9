@@ -7,15 +7,15 @@ $pass = "";
 
 try {
 
-    $conexion = new PDO(
-        "mysql:host=$host;dbname=$dbname;charset=utf8",
-        $user,
-        $pass
-    );
+    $conexion = new mysqli($host, $user, $pass, $dbname);
 
-    $conexion->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    if ($conexion->connect_error) {
+        throw new Exception($conexion->connect_error);
+    }
 
-} catch (PDOException $e) {
+    $conexion->set_charset("utf8");
+
+} catch (Exception $e) {
 
     die("Error de conexión: " . $e->getMessage());
 

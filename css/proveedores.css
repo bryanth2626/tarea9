@@ -1,0 +1,200 @@
+/* ── PÁGINA ── */
+.cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.cabecera h1 {
+  font-size: 28px;
+  color: #1a1f36;
+}
+
+.subtitulo {
+  color: #718096;
+  font-size: 14px;
+  margin-bottom: 30px;
+}
+
+/* Botón azul principal */
+.btn-nuevo {
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.btn-nuevo:hover {
+  background-color: #3730a3;
+}
+
+/* ── TABLA ── */
+.tabla-container {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+table thead {
+  background-color: #f7f8fa;
+}
+
+table thead th {
+  padding: 14px 18px;
+  text-align: left;
+  color: #718096;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+table tbody tr {
+  border-top: 1px solid #f0f2f5;
+}
+
+table tbody tr:hover {
+  background-color: #fafafa;
+}
+
+table tbody td {
+  padding: 14px 18px;
+  color: #2d3748;
+}
+
+/* Botones de acciones */
+.btn-editar,
+.btn-eliminar {
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-editar {
+  background-color: #ebf8ff;
+  color: #2b6cb0;
+  margin-right: 4px;
+}
+
+.btn-editar:hover {
+  background-color: #bee3f8;
+}
+
+.btn-eliminar {
+  background-color: #fff5f5;
+  color: #c53030;
+}
+
+.btn-eliminar:hover {
+  background-color: #fed7d7;
+}
+
+/* ── MODAL ── */
+.modal-fondo {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  z-index: 999;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-fondo.visible {
+  display: flex;
+}
+
+.modal {
+  background: white;
+  border-radius: 12px;
+  padding: 32px;
+  width: 420px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+.modal h2 {
+  font-size: 20px;
+  color: #1a1f36;
+  margin-bottom: 20px;
+}
+
+/* Campos */
+.campo {
+  margin-bottom: 16px;
+}
+
+.campo label {
+  display: block;
+  font-size: 13px;
+  color: #4a5568;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.campo input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #2d3748;
+  outline: none;
+}
+
+.campo input:focus {
+  border-color: #4f46e5;
+}
+
+/* Botones formulario */
+.modal-botones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.btn-cancelar {
+  background: #f0f2f5;
+  color: #4a5568;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.btn-cancelar:hover {
+  background: #e2e8f0;
+}
+
+.btn-guardar {
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.btn-guardar:hover {
+  background-color: #3730a3;
+}

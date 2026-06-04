@@ -1,12 +1,3 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sistema Ishume</title>
-
-<style>
-
 *{
     margin:0;
     padding:0;
@@ -20,7 +11,6 @@ body{
     background:#f0f2f5;
 }
 
-/* SIDEBAR */
 .sidebar{
     width:210px;
     background:#1a1f36;
@@ -61,33 +51,7 @@ body{
     color:#fff;
 }
 
-/* CONTENIDO */
 .contenido{
     flex:1;
     padding:40px;
 }
-
-.contenido h1{
-    font-size:28px;
-    color:#1a1f36;
-    margin-bottom:6px;
-}
-
-.contenido p{
-    color:#718096;
-}
-
-</style>
-
-</head>
-<body>
-
-<?php include 'sidebar.php'; ?>
-
-<div class="contenido">
-    <h1>Dashboard</h1>
-    <p>Bienvenido al sistema Ishume</p>
-</div>
-
-</body>
-</html>
