@@ -5,79 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sistema Ishume</title>
 
-<style>
 
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:Arial,sans-serif;
-}
-
-body{
-    display:flex;
-    min-height:100vh;
-    background:#f0f2f5;
-}
-
-/* SIDEBAR */
-.sidebar{
-    width:210px;
-    background:#1a1f36;
-    min-height:100vh;
-    display:flex;
-    flex-direction:column;
-    padding:20px 0;
-}
-
-.sidebar .logo{
-    text-align:center;
-    padding:10px 20px 30px;
-}
-
-.sidebar .logo img{
-    width:80px;
-}
-
-.sidebar a{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    padding:12px 20px;
-    color:#a0aec0;
-    text-decoration:none;
-    font-size:14px;
-    border-radius:8px;
-    margin:2px 10px;
-}
-
-.sidebar a:hover{
-    background:#2d3561;
-    color:#fff;
-}
-
-.sidebar a.activo{
-    background:#4f46e5;
-    color:#fff;
-}
-
-/* CONTENIDO */
-.contenido{
-    flex:1;
-    padding:40px;
-}
-
-.contenido h1{
-    font-size:28px;
-    color:#1a1f36;
-    margin-bottom:6px;
-}
-
-.contenido p{
-    color:#718096;
-}
-
-</style>
 
 </head>
 <body>
