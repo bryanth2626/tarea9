@@ -4,34 +4,62 @@ ini_set('display_errors', 1);
 
 require_once 'config/conexion.php';
 
-// ── GUARDAR NUEVO CONTRATO ───────────────────────────────────
+// ── GUARDAR TODO DE UNA VEZ ──────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['guardar'])) {
-    $idcliente      = $_POST['idcliente'];
-    $idtestigo      = $_POST['idtestigo'];
+
+    // 1. Guardamos el testigo primero
+    $testigo_nombre    = $_POST['testigo_nombre'];
+    $testigo_apellidos = $_POST['testigo_apellidos'];
+    $testigo_dni       = $_POST['testigo_dni'];
+
+    $sql = "INSERT INTO testigo (nombre, apellidos, DNI) VALUES (?, ?, ?)";
+    $stmt = $conexion->prepare($sql);
+    $stmt->bind_param("sss", $testigo_nombre, $testigo_apellidos, $testigo_dni);
+    $stmt->execute();
+    $idtestigo = $conexion->insert_id;
+    $stmt->close();
+
+    // 2. Guardamos el cliente
+    $nombre    = $_POST['nombre'];
+    $apellidos = $_POST['apellidos'];
+    $dni       = $_POST['dni'];
+    $telefono  = $_POST['telefono'];
+    $correo    = $_POST['correo'];
+    $direccion = $_POST['direccion'];
+
+    $sql2 = "INSERT INTO cliente (nombre, apellidos, DNI, telefono, correo, direccion)
+             VALUES (?, ?, ?, ?, ?, ?)";
+    $stmt2 = $conexion->prepare($sql2);
+    $stmt2->bind_param("ssssss", $nombre, $apellidos, $dni, $telefono, $correo, $direccion);
+    $stmt2->execute();
+    $idcliente = $conexion->insert_id;
+    $stmt2->close();
+
+    // 3. Guardamos el contrato
     $fecha_contrato = $_POST['fecha_contrato'];
     $fecha_entrega  = $_POST['fecha_entrega'] != '' ? $_POST['fecha_entrega'] : NULL;
 
-    $sql = "INSERT INTO contratos (fecha_contrato, fecha_entrega, idcliente, idtestigo)
-            VALUES (?, ?, ?, ?)";
-    $stmt = $conexion->prepare($sql);
-    $stmt->bind_param("ssii", $fecha_contrato, $fecha_entrega, $idcliente, $idtestigo);
-    $stmt->execute();
-
-    // Guardamos también el detalle (producto, cantidad, adelanto, total)
+    $sql3 = "INSERT INTO contratos (fecha_contrato, fecha_entrega, idcliente, idtestigo)
+             VALUES (?, ?, ?, ?)";
+    $stmt3 = $conexion->prepare($sql3);
+    $stmt3->bind_param("ssii", $fecha_contrato, $fecha_entrega, $idcliente, $idtestigo);
+    $stmt3->execute();
     $idcontrato = $conexion->insert_id;
+    $stmt3->close();
+
+    // 4. Guardamos el detalle del contrato
     $idproducto = $_POST['idproducto'];
     $cantidad   = $_POST['cantidad'];
     $adelanto   = $_POST['adelanto'];
     $total      = $_POST['total'];
     $subtotal   = $total - $adelanto;
 
-    $sql2 = "INSERT INTO detallecontratos (cantidad, adelanto, subtotal, total, idcontrato, idproducto)
+    $sql4 = "INSERT INTO detallecontratos (cantidad, adelanto, subtotal, total, idcontrato, idproducto)
              VALUES (?, ?, ?, ?, ?, ?)";
-    $stmt2 = $conexion->prepare($sql2);
-    $stmt2->bind_param("idddii", $cantidad, $adelanto, $subtotal, $total, $idcontrato, $idproducto);
-    $stmt2->execute();
-    $stmt2->close();
-    $stmt->close();
+    $stmt4 = $conexion->prepare($sql4);
+    $stmt4->bind_param("idddii", $cantidad, $adelanto, $subtotal, $total, $idcontrato, $idproducto);
+    $stmt4->execute();
+    $stmt4->close();
 
     header("Location: contratos.php");
     exit();
@@ -41,16 +69,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['guardar'])) {
 if (isset($_GET['eliminar'])) {
     $id = $_GET['eliminar'];
 
-    // Primero eliminamos el detalle (por la FK)
-    $sql = "DELETE FROM detallecontratos WHERE idcontrato = ?";
-    $stmt = $conexion->prepare($sql);
+    // Primero el detalle, luego el contrato (por las FK)
+    $stmt = $conexion->prepare("DELETE FROM detallecontratos WHERE idcontrato = ?");
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $stmt->close();
 
-    // Luego eliminamos el contrato
-    $sql2 = "DELETE FROM contratos WHERE id = ?";
-    $stmt2 = $conexion->prepare($sql2);
+    $stmt2 = $conexion->prepare("DELETE FROM contratos WHERE id = ?");
     $stmt2->bind_param("i", $id);
     $stmt2->execute();
     $stmt2->close();
@@ -59,25 +84,25 @@ if (isset($_GET['eliminar'])) {
     exit();
 }
 
-// ── OBTENER CONTRATOS (con nombre del cliente) ───────────────
+// ── OBTENER CONTRATOS PARA LA TABLA ─────────────────────────
 $contratos = $conexion->query("
     SELECT
         c.id,
         c.fecha_contrato,
         c.fecha_entrega,
-        cl.nombre AS nombre_cliente,
-        cl.apellidos AS apellidos_cliente,
-        t.nombre AS nombre_testigo,
-        t.apellidos AS apellidos_testigo
+        cl.nombre       AS nombre_cliente,
+        cl.apellidos    AS apellidos_cliente,
+        cl.DNI          AS dni_cliente,
+        cl.telefono     AS telefono_cliente,
+        t.nombre        AS nombre_testigo,
+        t.apellidos     AS apellidos_testigo
     FROM contratos c
     INNER JOIN cliente cl ON c.idcliente = cl.id
     LEFT  JOIN testigo t  ON c.idtestigo = t.id
     ORDER BY c.id DESC
 ");
 
-// ── LISTAS PARA EL FORMULARIO ────────────────────────────────
-$clientes  = $conexion->query("SELECT id, nombre, apellidos FROM cliente ORDER BY nombre");
-$testigos  = $conexion->query("SELECT id, nombre, apellidos FROM testigo ORDER BY nombre");
+// ── PRODUCTOS PARA EL SELECT ─────────────────────────────────
 $productos = $conexion->query("SELECT id, nombre FROM productos ORDER BY nombre");
 ?>
 
@@ -112,6 +137,8 @@ $productos = $conexion->query("SELECT id, nombre FROM productos ORDER BY nombre"
         <tr>
           <th>#</th>
           <th>Cliente</th>
+          <th>DNI cliente</th>
+          <th>Teléfono</th>
           <th>Testigo</th>
           <th>Fecha contrato</th>
           <th>Fecha entrega</th>
@@ -126,13 +153,12 @@ $productos = $conexion->query("SELECT id, nombre FROM productos ORDER BY nombre"
         <tr>
           <td><?php echo str_pad($numero++, 2, '0', STR_PAD_LEFT); ?></td>
           <td><?php echo htmlspecialchars($fila['nombre_cliente'] . ' ' . $fila['apellidos_cliente']); ?></td>
+          <td><?php echo htmlspecialchars($fila['dni_cliente']); ?></td>
+          <td><?php echo $fila['telefono_cliente'] ? htmlspecialchars($fila['telefono_cliente']) : '—'; ?></td>
           <td>
-            <?php
-              if ($fila['nombre_testigo']) {
-                  echo htmlspecialchars($fila['nombre_testigo'] . ' ' . $fila['apellidos_testigo']);
-              } else {
-                  echo '—';
-              }
+            <?php echo $fila['nombre_testigo']
+                ? htmlspecialchars($fila['nombre_testigo'] . ' ' . $fila['apellidos_testigo'])
+                : '—';
             ?>
           </td>
           <td><?php echo $fila['fecha_contrato']; ?></td>
@@ -150,7 +176,7 @@ $productos = $conexion->query("SELECT id, nombre FROM productos ORDER BY nombre"
 
         <?php if ($numero == 1): ?>
         <tr>
-          <td colspan="6" style="text-align:center; color:#a0aec0; padding: 30px;">
+          <td colspan="8" style="text-align:center; color:#a0aec0; padding: 30px;">
             No hay contratos registrados aún.
           </td>
         </tr>
@@ -168,40 +194,64 @@ $productos = $conexion->query("SELECT id, nombre FROM productos ORDER BY nombre"
 
     <form method="POST" action="contratos.php">
 
-      <!-- Cliente -->
-      <div class="campo">
-        <label>Cliente *</label>
-        <select name="idcliente" required>
-          <option value="">-- Selecciona un cliente --</option>
-          <?php
-          // Reiniciamos el puntero de la consulta
-          $clientes->data_seek(0);
-          while ($c = $clientes->fetch_assoc()):
-          ?>
-          <option value="<?php echo $c['id']; ?>">
-            <?php echo htmlspecialchars($c['nombre'] . ' ' . $c['apellidos']); ?>
-          </option>
-          <?php endwhile; ?>
-        </select>
+      <!-- ── DATOS DEL CLIENTE ── -->
+      <p class="seccion-titulo">Datos del cliente</p>
+
+      <div class="campo-fila">
+        <div class="campo">
+          <label>Nombre *</label>
+          <input type="text" name="nombre" placeholder="Ej: María" required>
+        </div>
+        <div class="campo">
+          <label>Apellidos *</label>
+          <input type="text" name="apellidos" placeholder="Ej: López Torres" required>
+        </div>
       </div>
 
-      <!-- Testigo -->
-      <div class="campo">
-        <label>Testigo</label>
-        <select name="idtestigo">
-          <option value="">-- Sin testigo --</option>
-          <?php
-          $testigos->data_seek(0);
-          while ($t = $testigos->fetch_assoc()):
-          ?>
-          <option value="<?php echo $t['id']; ?>">
-            <?php echo htmlspecialchars($t['nombre'] . ' ' . $t['apellidos']); ?>
-          </option>
-          <?php endwhile; ?>
-        </select>
+      <div class="campo-fila">
+        <div class="campo">
+          <label>DNI *</label>
+          <input type="text" name="dni" placeholder="Ej: 12345678" maxlength="20" required>
+        </div>
+        <div class="campo">
+          <label>Teléfono</label>
+          <input type="text" name="telefono" placeholder="Ej: 999 000 111">
+        </div>
       </div>
 
-      <!-- Fechas en la misma fila -->
+      <div class="campo-fila">
+        <div class="campo">
+          <label>Correo</label>
+          <input type="email" name="correo" placeholder="Ej: maria@correo.com">
+        </div>
+        <div class="campo">
+          <label>Dirección</label>
+          <input type="text" name="direccion" placeholder="Ej: Av. Los Álamos 456">
+        </div>
+      </div>
+
+      <!-- ── DATOS DEL TESTIGO ── -->
+      <p class="seccion-titulo">Datos del testigo</p>
+
+      <div class="campo-fila">
+        <div class="campo">
+          <label>Nombre *</label>
+          <input type="text" name="testigo_nombre" placeholder="Ej: Carlos" required>
+        </div>
+        <div class="campo">
+          <label>Apellidos *</label>
+          <input type="text" name="testigo_apellidos" placeholder="Ej: Ramos Silva" required>
+        </div>
+      </div>
+
+      <div class="campo">
+        <label>DNI del testigo *</label>
+        <input type="text" name="testigo_dni" placeholder="Ej: 87654321" maxlength="20" required>
+      </div>
+
+      <!-- ── DATOS DEL CONTRATO ── -->
+      <p class="seccion-titulo">Datos del contrato</p>
+
       <div class="campo-fila">
         <div class="campo">
           <label>Fecha del contrato *</label>
@@ -213,15 +263,11 @@ $productos = $conexion->query("SELECT id, nombre FROM productos ORDER BY nombre"
         </div>
       </div>
 
-      <!-- Producto -->
       <div class="campo">
         <label>Producto *</label>
         <select name="idproducto" required>
           <option value="">-- Selecciona un producto --</option>
-          <?php
-          $productos->data_seek(0);
-          while ($p = $productos->fetch_assoc()):
-          ?>
+          <?php while ($p = $productos->fetch_assoc()): ?>
           <option value="<?php echo $p['id']; ?>">
             <?php echo htmlspecialchars($p['nombre']); ?>
           </option>
@@ -229,7 +275,6 @@ $productos = $conexion->query("SELECT id, nombre FROM productos ORDER BY nombre"
         </select>
       </div>
 
-      <!-- Cantidad y adelanto en la misma fila -->
       <div class="campo-fila">
         <div class="campo">
           <label>Cantidad *</label>
@@ -241,7 +286,6 @@ $productos = $conexion->query("SELECT id, nombre FROM productos ORDER BY nombre"
         </div>
       </div>
 
-      <!-- Total -->
       <div class="campo">
         <label>Total (S/.) *</label>
         <input type="number" name="total" min="0" step="0.01" value="0.00" required>
