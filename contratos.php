@@ -264,15 +264,8 @@ $productos = $conexion->query("SELECT id, nombre FROM productos ORDER BY nombre"
       </div>
 
       <div class="campo">
-        <label>Producto *</label>
-        <select name="idproducto" required>
-          <option value="">-- Selecciona un producto --</option>
-          <?php while ($p = $productos->fetch_assoc()): ?>
-          <option value="<?php echo $p['id']; ?>">
-            <?php echo htmlspecialchars($p['nombre']); ?>
-          </option>
-          <?php endwhile; ?>
-        </select>
+        <<label>Producto *</label>
+            <input type="text" name="producto" placeholder="Escribe el producto" required>
       </div>
 
       <div class="campo-fila">
