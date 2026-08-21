@@ -7,62 +7,137 @@ require_once 'config/conexion.php';
 // ── GUARDAR TODO DE UNA VEZ ──────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['guardar'])) {
 
-    // 1. Guardamos el testigo primero
-    $testigo_nombre    = $_POST['testigo_nombre'];
-    $testigo_apellidos = $_POST['testigo_apellidos'];
-    $testigo_dni       = $_POST['testigo_dni'];
+    try {
 
-    $sql = "INSERT INTO testigo (nombre, apellidos, DNI) VALUES (?, ?, ?)";
-    $stmt = $conexion->prepare($sql);
-    $stmt->bind_param("sss", $testigo_nombre, $testigo_apellidos, $testigo_dni);
-    $stmt->execute();
-    $idtestigo = $conexion->insert_id;
-    $stmt->close();
+        // Iniciamos la transacción
+        $conexion->begin_transaction();
 
-    // 2. Guardamos el cliente
-    $nombre    = $_POST['nombre'];
-    $apellidos = $_POST['apellidos'];
-    $dni       = $_POST['dni'];
-    $telefono  = $_POST['telefono'];
-    $correo    = $_POST['correo'];
-    $direccion = $_POST['direccion'];
+        // 1. Guardamos el CLIENTE primero
+        $nombre    = $_POST['nombre'];
+        $apellidos = $_POST['apellidos'];
+        $dni       = $_POST['dni'];
+        $telefono  = $_POST['telefono'];
+        $correo    = $_POST['correo'];
+        $direccion = $_POST['direccion'];
 
-    $sql2 = "INSERT INTO cliente (nombre, apellidos, DNI, telefono, correo, direccion)
-             VALUES (?, ?, ?, ?, ?, ?)";
-    $stmt2 = $conexion->prepare($sql2);
-    $stmt2->bind_param("ssssss", $nombre, $apellidos, $dni, $telefono, $correo, $direccion);
-    $stmt2->execute();
-    $idcliente = $conexion->insert_id;
-    $stmt2->close();
+        $sql2 = "INSERT INTO cliente 
+                 (nombre, apellidos, DNI, telefono, correo, direccion)
+                 VALUES (?, ?, ?, ?, ?, ?)";
 
-    // 3. Guardamos el contrato
-    $fecha_contrato = $_POST['fecha_contrato'];
-    $fecha_entrega  = $_POST['fecha_entrega'] != '' ? $_POST['fecha_entrega'] : NULL;
+        $stmt2 = $conexion->prepare($sql2);
 
-    $sql3 = "INSERT INTO contratos (fecha_contrato, fecha_entrega, idcliente, idtestigo)
-             VALUES (?, ?, ?, ?)";
-    $stmt3 = $conexion->prepare($sql3);
-    $stmt3->bind_param("ssii", $fecha_contrato, $fecha_entrega, $idcliente, $idtestigo);
-    $stmt3->execute();
-    $idcontrato = $conexion->insert_id;
-    $stmt3->close();
+        $stmt2->bind_param(
+            "ssssss",
+            $nombre,
+            $apellidos,
+            $dni,
+            $telefono,
+            $correo,
+            $direccion
+        );
 
-    // 4. Guardamos el detalle del contrato
-    $idproducto = $_POST['idproducto'];
-    $cantidad   = $_POST['cantidad'];
-    $adelanto   = $_POST['adelanto'];
-    $total      = $_POST['total'];
-    $subtotal   = $total - $adelanto;
+        $stmt2->execute();
 
-    $sql4 = "INSERT INTO detallecontratos (cantidad, adelanto, subtotal, total, idcontrato, idproducto)
-             VALUES (?, ?, ?, ?, ?, ?)";
-    $stmt4 = $conexion->prepare($sql4);
-    $stmt4->bind_param("idddii", $cantidad, $adelanto, $subtotal, $total, $idcontrato, $idproducto);
-    $stmt4->execute();
-    $stmt4->close();
+        $idcliente = $conexion->insert_id;
 
-    header("Location: contratos.php");
-    exit();
+        $stmt2->close();
+
+
+        // 2. Guardamos el TESTIGO después
+        $testigo_nombre    = $_POST['testigo_nombre'];
+        $testigo_apellidos = $_POST['testigo_apellidos'];
+        $testigo_dni       = $_POST['testigo_dni'];
+
+        $sql = "INSERT INTO testigo
+                (nombre, apellidos, DNI)
+                VALUES (?, ?, ?)";
+
+        $stmt = $conexion->prepare($sql);
+
+        $stmt->bind_param(
+            "sss",
+            $testigo_nombre,
+            $testigo_apellidos,
+            $testigo_dni
+        );
+
+        $stmt->execute();
+
+        $idtestigo = $conexion->insert_id;
+
+        $stmt->close();
+
+
+        // 3. Guardamos el CONTRATO
+        $fecha_contrato = $_POST['fecha_contrato'];
+        $fecha_entrega  = $_POST['fecha_entrega'] != ''
+            ? $_POST['fecha_entrega']
+            : NULL;
+
+        $sql3 = "INSERT INTO contratos
+                 (fecha_contrato, fecha_entrega, idcliente, idtestigo)
+                 VALUES (?, ?, ?, ?)";
+
+        $stmt3 = $conexion->prepare($sql3);
+
+        $stmt3->bind_param(
+            "ssii",
+            $fecha_contrato,
+            $fecha_entrega,
+            $idcliente,
+            $idtestigo
+        );
+
+        $stmt3->execute();
+
+        $idcontrato = $conexion->insert_id;
+
+        $stmt3->close();
+
+
+        // 4. Guardamos el DETALLE DEL CONTRATO
+        $idproducto = $_POST['idproducto'];
+        $cantidad   = $_POST['cantidad'];
+        $adelanto   = $_POST['adelanto'];
+        $total      = $_POST['total'];
+
+        $subtotal = $total - $adelanto;
+
+        $sql4 = "INSERT INTO detallecontratos
+                 (cantidad, adelanto, subtotal, total, idcontrato, idproducto)
+                 VALUES (?, ?, ?, ?, ?, ?)";
+
+        $stmt4 = $conexion->prepare($sql4);
+
+        $stmt4->bind_param(
+            "idddii",
+            $cantidad,
+            $adelanto,
+            $subtotal,
+            $total,
+            $idcontrato,
+            $idproducto
+        );
+
+        $stmt4->execute();
+
+        $stmt4->close();
+
+
+        // 5. Si todo salió bien, guardamos definitivamente
+        $conexion->commit();
+
+        header("Location: contratos.php");
+        exit();
+
+
+    } catch (Throwable $e) {
+
+        // Si algo falla, deshacemos TODO
+        $conexion->rollback();
+
+        echo "Error al guardar el contrato: " . $e->getMessage();
+    }
 }
 
 // ── ELIMINAR CONTRATO ────────────────────────────────────────
@@ -264,8 +339,17 @@ $productos = $conexion->query("SELECT id, nombre FROM productos ORDER BY nombre"
       </div>
 
       <div class="campo">
-        <<label>Producto *</label>
-            <input type="text" name="producto" placeholder="Escribe el producto" required>
+          <label>Producto *</label>
+          <select name="idproducto" required>
+              <option value="">Selecciona un producto</option>
+
+              <?php while ($producto = $productos->fetch_assoc()): ?>
+                  <option value="<?php echo $producto['id']; ?>">
+                      <?php echo htmlspecialchars($producto['nombre']); ?>
+                  </option>
+              <?php endwhile; ?>
+
+          </select>
       </div>
 
       <div class="campo-fila">

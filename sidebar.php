@@ -14,7 +14,7 @@ $pagina_actual = basename($_SERVER['PHP_SELF']);
     </a>
 
     <a href="proveedores.php" class="<?php echo ($pagina_actual == 'proveedores.php') ? 'activo' : ''; ?>">
-        <span class="icono">🏭</span>
+        <span class="icono">🚚</span>
         Proveedores
     </a>
 
