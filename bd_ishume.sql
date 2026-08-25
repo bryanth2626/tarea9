@@ -1,14 +1,14 @@
-
-CREATE DATABASE  productora_audiovisual;
+CREATE DATABASE productora_audiovisual;
 USE productora_audiovisual;
 
-
+-- ------------------------------------------------------------
+-- CATEGORIAS
+-- ------------------------------------------------------------
 CREATE TABLE categorias (
   id    INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
   tipo  VARCHAR(100) NOT NULL
 ) ENGINE=InnoDB;
 
-select * from proveedores;
 -- ------------------------------------------------------------
 -- PROVEEDORES
 -- ------------------------------------------------------------
@@ -17,7 +17,8 @@ CREATE TABLE proveedores (
   nombre    VARCHAR(150) NOT NULL,
   telefono  VARCHAR(20),
   direccion VARCHAR(255)
-) ENGINE=InnoDB ;
+) ENGINE=InnoDB;
+
 
 -- ------------------------------------------------------------
 -- COMPRAS (cabecera)
@@ -27,9 +28,11 @@ CREATE TABLE compras (
   fecha           DATE        NOT NULL,
   tipocomprobante VARCHAR(50),
   idproveedor     INT         NOT NULL,
+
   CONSTRAINT fk_compras_proveedor
-    FOREIGN KEY (idproveedor) REFERENCES proveedores (id)
+    FOREIGN KEY (idproveedor) REFERENCES proveedores(id)
 ) ENGINE=InnoDB;
+
 
 -- ------------------------------------------------------------
 -- PRODUCTOS
@@ -39,9 +42,11 @@ CREATE TABLE productos (
   nombre      VARCHAR(150)   NOT NULL,
   precio_base DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
   idcategoria INT            NOT NULL,
+
   CONSTRAINT fk_producto_categoria
-    FOREIGN KEY (idcategoria) REFERENCES categorias (id)
+    FOREIGN KEY (idcategoria) REFERENCES categorias(id)
 ) ENGINE=InnoDB;
+
 
 -- ------------------------------------------------------------
 -- DETALLE DE COMPRA
@@ -52,14 +57,17 @@ CREATE TABLE detalleCompra (
   precio     DECIMAL(10, 2) NOT NULL,
   idcompra   INT            NOT NULL,
   idproducto INT            NOT NULL,
+
   CONSTRAINT fk_detallecompra_compra
-    FOREIGN KEY (idcompra)   REFERENCES compras   (id),
+    FOREIGN KEY (idcompra) REFERENCES compras(id),
+
   CONSTRAINT fk_detallecompra_producto
-    FOREIGN KEY (idproducto) REFERENCES productos  (id)
+    FOREIGN KEY (idproducto) REFERENCES productos(id)
 ) ENGINE=InnoDB;
 
+
 -- ------------------------------------------------------------
--- CLIENTES (coordinador / coordinadora del colegio)
+-- CLIENTES
 -- ------------------------------------------------------------
 CREATE TABLE cliente (
   id        INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -71,6 +79,7 @@ CREATE TABLE cliente (
   telefono  VARCHAR(20)
 ) ENGINE=InnoDB;
 
+
 -- ------------------------------------------------------------
 -- TESTIGOS
 -- ------------------------------------------------------------
@@ -81,8 +90,12 @@ CREATE TABLE testigo (
   DNI       VARCHAR(20)  NOT NULL
 ) ENGINE=InnoDB;
 
+
+select * from cliente;
+select * from contratos;
 -- ------------------------------------------------------------
--- CONTRATOS (un cliente puede tener más de uno)
+-- CONTRATOS
+-- Un cliente puede tener más de un contrato
 -- ------------------------------------------------------------
 CREATE TABLE contratos (
   id             INT  NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -90,38 +103,29 @@ CREATE TABLE contratos (
   fecha_entrega  DATE,
   idcliente      INT  NOT NULL,
   idtestigo      INT,
+
   CONSTRAINT fk_contrato_cliente
-    FOREIGN KEY (idcliente) REFERENCES cliente (id),
+    FOREIGN KEY (idcliente) REFERENCES cliente(id),
+
   CONSTRAINT fk_contrato_testigo
-    FOREIGN KEY (idtestigo) REFERENCES testigo (id)
+    FOREIGN KEY (idtestigo) REFERENCES testigo(id)
 ) ENGINE=InnoDB;
+
+select*from contratos;
 
 -- ------------------------------------------------------------
 -- DETALLE DE CONTRATO
+-- El producto se escribe directamente como texto
 -- ------------------------------------------------------------
 CREATE TABLE detallecontratos (
   id         INT            NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  producto   VARCHAR(150)   NOT NULL,
   cantidad   INT            NOT NULL DEFAULT 1,
   adelanto   DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
   subtotal   DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
   total      DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
   idcontrato INT            NOT NULL,
-  idproducto INT            NOT NULL,
+
   CONSTRAINT fk_detalle_contrato
-    FOREIGN KEY (idcontrato) REFERENCES contratos (id),
-  CONSTRAINT fk_detalle_producto
-    FOREIGN KEY (idproducto) REFERENCES productos  (id)
+    FOREIGN KEY (idcontrato) REFERENCES contratos(id)
 ) ENGINE=InnoDB;
-
--- ------------------------------------------------------------
--- DATOS DE EJEMPLO (opcional, puedes borrar esta sección)
--- ------------------------------------------------------------
-INSERT INTO categorias (tipo) VALUES ('Cuadro'), ('Anuario');
-
-INSERT INTO proveedores (nombre, telefono, direccion)
-  VALUES ('Imprenta XYZ', '999000111', 'Av. Principal 123');
-
-INSERT INTO productos (nombre, precio_base, idcategoria)
-  VALUES
-  ('Cuadro A3 standard',  50.00, 1),
-  ('Anuario 100 páginas', 80.00, 2);
